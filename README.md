@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# StoreCount
 
-## Getting Started
+A mobile-first PWA that helps small business owners track inventory, ring up
+customer bills in seconds, and see revenue and profit without manual math.
 
-First, run the development server:
+## Features
+
+- **Multi-step onboarding** — name → contact → 4-digit PIN → done
+- **PIN lock** — PBKDF2-hashed PIN, remembered device unlocks with PIN only
+- **Dashboard** — revenue, profit, sales today/this week, restock warnings,
+  recent activity, quick actions
+- **Products** — add/edit/delete with optional photo, category, cost & selling
+  price (profit per unit computed live), search and stock-status filters
+- **New Sale** — tap-to-add cart, quantity steppers capped by stock, instant
+  totals, checkout reduces inventory and records revenue + profit
+- **Receipts** — itemized, with transaction reference, date, time, and profit
+- **Reports** — today/week/month revenue & profit, 7-day revenue chart, top
+  sellers, most profitable, restock list
+- **Settings** — profile, business name, change PIN, lock, erase data
+- **PWA** — installable (manifest + icons), offline via service worker
+
+## Stack
+
+Next.js (App Router) · TypeScript · Tailwind CSS v4 · zero runtime dependencies
+beyond React.
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Production:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build && npm start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+App icons are generated procedurally (no design tooling needed):
 
-## Learn More
+```bash
+node scripts/generate-icons.mjs
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Architecture
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Design tokens** — all colors, radii, and shadows are CSS variables in
+  [app/globals.css](app/globals.css); re-branding is a one-file change.
+- **Data layer** — [lib/storage.ts](lib/storage.ts) defines a `StorageAdapter`
+  interface (localStorage today; IndexedDB or a synced backend later without
+  touching UI). [lib/store.ts](lib/store.ts) provides tiny observable stores
+  consumed through `useSyncExternalStore` hooks.
+- **Domain logic** — pure functions in [lib/calc.ts](lib/calc.ts) (aggregations,
+  stock status) and [lib/inventory.ts](lib/inventory.ts) (CRUD + checkout
+  transaction). Sales snapshot price/cost at checkout so history stays correct
+  when products change.
+- **Auth** — [lib/auth.ts](lib/auth.ts): PIN hashed with PBKDF2 + random salt
+  via WebCrypto; unlock state lives in sessionStorage so closing the app locks
+  it.
+- **UI kit** — small reusable components in [components/ui/](components/ui/)
+  (Button, Card, Field, Sheet, PinInput, StatCard, icons…), all styled through
+  the tokens.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+All data is stored on-device, which is what makes the app fully functional
+offline once installed.
