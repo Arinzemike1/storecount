@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Field } from "@/components/ui/input";
-import { LockIcon, Logo } from "@/components/ui/icons";
+import { ArrowLeftIcon, LockIcon, Logo } from "@/components/ui/icons";
 import { PIN_LENGTH, PinInput } from "@/components/ui/pin-input";
 import {
   normalizePhone,
@@ -80,7 +80,17 @@ export default function LoginPage() {
 
     return (
       <main className="flex-1 flex flex-col mx-auto w-full max-w-md px-6 pt-safe pb-safe">
-        <div className="flex flex-col items-center text-center gap-3 pt-16 pb-10 animate-fade-up">
+        <header className="flex items-center h-14">
+          <button
+            onClick={() => router.push("/")}
+            aria-label="Go back"
+            className="-ml-2 size-10 rounded-full flex items-center justify-center text-ink active:bg-surface-2"
+          >
+            <ArrowLeftIcon className="size-6" />
+          </button>
+        </header>
+
+        <div className="flex flex-col items-center text-center gap-3 pt-8 pb-10 animate-fade-up">
           <Logo size={64} />
           <h1 className="text-[26px] font-bold tracking-tight text-ink mt-2">
             Restore your account
@@ -96,6 +106,7 @@ export default function LoginPage() {
             label="Phone Number"
             type="tel"
             inputMode="tel"
+            maxLength={11}
             value={phone}
             onChange={(e) => {
               setPhone(e.target.value);
@@ -114,6 +125,15 @@ export default function LoginPage() {
           error={pinError}
           disabled={checking && !pinError}
         />
+
+        {checking && !pinError && (
+          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-bg/80 backdrop-blur-sm">
+            <div className="size-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+            <p className="text-[15px] font-medium text-ink-2">
+              Restoring your account…
+            </p>
+          </div>
+        )}
       </main>
     );
   }
@@ -201,6 +221,13 @@ export default function LoginPage() {
             autoComplete="tel"
             autoFocus
           />
+        </div>
+      )}
+
+      {checking && !pinError && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-bg/80 backdrop-blur-sm">
+          <div className="size-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          <p className="text-[15px] font-medium text-ink-2">Verifying…</p>
         </div>
       )}
 

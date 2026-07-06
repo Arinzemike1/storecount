@@ -40,45 +40,52 @@ export default function WelcomePage() {
 
   return (
     <main className="flex-1 flex flex-col mx-auto w-full max-w-md px-6 pt-safe pb-safe">
-      <div className="flex-1 flex flex-col items-center justify-center text-center gap-4 py-10 animate-fade-up">
-        <Logo size={80} />
-        <h1 className="text-4xl font-bold tracking-tight text-ink mt-2">
+      {/* Hero */}
+      <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 py-10 animate-fade-up">
+        <Logo size={52} />
+        <h1 className="text-[32px] font-bold tracking-tight text-ink mt-1">
           StoreCount
         </h1>
-        <p className="text-[17px] text-ink-2 max-w-70 leading-snug">
-          Your shop&apos;s counter, stock book, and profit tracker — in your
-          pocket.
+        <p className="text-[17px] text-ink-2 max-w-72 leading-snug">
+          Count stock, track sales, and know your <em>profit</em> — all in one
+          place.
         </p>
       </div>
 
-      <div className="flex flex-col gap-3 pb-8">
-        {highlights.map(({ icon: HighlightIcon, title, text }) => (
+      {/* Feature list */}
+      <div className="border-t border-border">
+        {highlights.map(({ icon: HighlightIcon, title, text }, i) => (
           <div
             key={title}
-            className="flex items-center gap-4 bg-surface rounded-card border border-border shadow-card px-4 py-3.5"
+            className={`flex items-center gap-4 py-4${
+              i < highlights.length - 1 ? " border-b border-border" : ""
+            }`}
           >
-            <span className="size-11 rounded-2xl bg-primary-soft text-primary flex items-center justify-center shrink-0">
-              <HighlightIcon className="size-6" />
+            <span className="text-primary shrink-0">
+              <HighlightIcon className="size-7" />
             </span>
-            <div className="text-left">
+            <div>
               <p className="font-semibold text-ink text-[15px]">{title}</p>
-              <p className="text-sm text-ink-2">{text}</p>
+              <p className="text-[14px] text-ink-2 mt-0.5">{text}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="pb-10">
+      <div className="pt-6 pb-10">
         <Link
           href="/onboarding"
-          className="flex items-center justify-center h-14 w-full rounded-control bg-primary text-on-primary text-[17px] font-semibold shadow-card active:scale-[0.98] active:bg-primary-deep transition-all"
+          className="flex items-center justify-center h-14 w-full rounded-control bg-primary text-on-primary text-[17px] font-semibold active:scale-[0.98] active:bg-primary-deep transition-all"
         >
-          Get Started
+          Get started
         </Link>
         <p className="text-center text-[14px] text-ink-2 mt-4">
           Already have an account?{" "}
-          <Link href="/login" className="text-primary font-semibold">
-            Restore &amp; sign in
+          <Link
+            href="/login"
+            className="text-ink font-semibold underline underline-offset-2"
+          >
+            Sign in
           </Link>
         </p>
       </div>

@@ -50,7 +50,7 @@ export default function DashboardPage() {
       <header className="pt-5 flex items-center justify-between">
         <div>
           <p className="text-[15px] text-ink-2">{greeting()},</p>
-          <h1 className="text-[24px] font-bold tracking-tight text-ink leading-tight">
+          <h1 className="text-[24px] font-bold capitalize tracking-tight text-ink leading-tight">
             {profile?.firstName ?? "there"}
             {settings.businessName ? ` · ${settings.businessName}` : ""}
           </h1>
@@ -75,7 +75,6 @@ export default function DashboardPage() {
           label="Total Profit"
           value={money(allTime.profit)}
           icon={<WalletIcon className="size-5" />}
-          tone="accent"
         />
         <StatCard
           label="Sales Today"
@@ -88,7 +87,6 @@ export default function DashboardPage() {
           value={String(week.count)}
           sub={week.count > 0 ? money(week.revenue) : "No sales this week"}
           icon={<ReceiptIcon className="size-5" />}
-          tone="accent"
         />
         <StatCard
           label="Products"
@@ -106,26 +104,49 @@ export default function DashboardPage() {
                 : "All stocked up"
           }
           icon={<AlertIcon className="size-5" />}
-          tone={outOfStock.length > 0 ? "danger" : lowStock.length > 0 ? "warning" : "primary"}
+          tone={
+            outOfStock.length > 0
+              ? "danger"
+              : lowStock.length > 0
+                ? "warning"
+                : "primary"
+          }
         />
       </section>
 
       {/* Quick actions */}
       <section aria-label="Quick actions" className="grid grid-cols-3 gap-3">
-        <QuickAction href="/sales/new" label="New Sale" icon={<CartIcon className="size-6" />} primary />
-        <QuickAction href="/products/new" label="Add Product" icon={<PlusIcon className="size-6" />} />
-        <QuickAction href="/products" label="Inventory" icon={<BoxIcon className="size-6" />} />
+        <QuickAction
+          href="/sales/new"
+          label="New Sale"
+          icon={<CartIcon className="size-6" />}
+          primary
+        />
+        <QuickAction
+          href="/products/new"
+          label="Add Product"
+          icon={<PlusIcon className="size-6" />}
+        />
+        <QuickAction
+          href="/products"
+          label="Inventory"
+          icon={<BoxIcon className="size-6" />}
+        />
       </section>
 
       {/* Recent sales */}
       <section aria-label="Recent sales" className="flex flex-col gap-3">
-        <SectionHeading title="Recent Sales" href="/sales" show={sales.length > 0} />
+        <SectionHeading
+          title="Recent Sales"
+          href="/sales"
+          show={sales.length > 0}
+        />
         {recentSales.length === 0 ? (
           <Card className="p-5 text-center">
             <p className="text-[15px] text-ink-2">
               No sales recorded yet. Tap{" "}
-              <span className="font-semibold text-primary">New Sale</span> to ring
-              up your first customer.
+              <span className="font-semibold text-primary">New Sale</span> to
+              ring up your first customer.
             </p>
           </Card>
         ) : (
@@ -141,7 +162,8 @@ export default function DashboardPage() {
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-ink text-[15px] truncate">
-                    {sale.totalQuantity} {sale.totalQuantity === 1 ? "item" : "items"}
+                    {sale.totalQuantity}{" "}
+                    {sale.totalQuantity === 1 ? "item" : "items"}
                   </p>
                   <p className="text-[13px] text-ink-3">
                     {formatRelative(sale.createdAt)}
@@ -162,7 +184,10 @@ export default function DashboardPage() {
 
       {/* Recently added products */}
       {recentProducts.length > 0 && (
-        <section aria-label="Recently added products" className="flex flex-col gap-3 pb-4">
+        <section
+          aria-label="Recently added products"
+          className="flex flex-col gap-3 pb-4"
+        >
           <SectionHeading title="Recent Products" href="/products" show />
           <Card className="divide-y divide-border">
             {recentProducts.map((product) => (
@@ -212,7 +237,10 @@ function SectionHeading({
     <div className="flex items-center justify-between">
       <h2 className="text-[17px] font-bold text-ink">{title}</h2>
       {show && (
-        <Link href={href} className="text-sm font-semibold text-primary py-1 px-2 -mr-2">
+        <Link
+          href={href}
+          className="text-sm font-semibold text-primary py-1 px-2 -mr-2"
+        >
           See all
         </Link>
       )}

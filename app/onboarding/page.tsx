@@ -52,7 +52,7 @@ export default function OnboardingPage() {
 
   function continueFromContact() {
     const next: Partial<Draft> = {};
-    if (!/^\S+@\S+\.\S+$/.test(draft.email.trim())) {
+    if (draft.email.trim() && !/^\S+@\S+\.\S+$/.test(draft.email.trim())) {
       next.email = "Please enter a valid email address";
     }
     if (draft.phone.replace(/\D/g, "").length < 7) {
@@ -215,7 +215,7 @@ export default function OnboardingPage() {
           </p>
           <div className="flex flex-col gap-4">
             <Field
-              label="Email Address"
+              label="Email Address (optional)"
               type="email"
               inputMode="email"
               value={draft.email}
@@ -266,6 +266,15 @@ export default function OnboardingPage() {
             error={pinError}
             disabled={saving}
           />
+
+          {saving && (
+            <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-bg/80 backdrop-blur-sm">
+              <div className="size-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+              <p className="text-[15px] font-medium text-ink-2">
+                Setting up your account…
+              </p>
+            </div>
+          )}
         </section>
       )}
 
