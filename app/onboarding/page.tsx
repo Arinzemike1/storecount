@@ -270,7 +270,9 @@ export default function OnboardingPage() {
           {saving && (
             <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-bg/80 backdrop-blur-sm">
               <div className="size-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-              <p className="text-[15px] font-medium text-ink-2">Setting up your account…</p>
+              <p className="text-[15px] font-medium text-ink-2">
+                Setting up your account…
+              </p>
             </div>
           )}
         </section>
