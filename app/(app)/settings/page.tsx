@@ -18,11 +18,7 @@ import {
   TrashIcon,
   UserIcon,
 } from "@/components/ui/icons";
-import {
-  createPinCredential,
-  lockSession,
-  verifyPin,
-} from "@/lib/auth";
+import { createPinCredential, lockSession, verifyPin } from "@/lib/auth";
 import {
   profileStore,
   resetAllData,
@@ -30,14 +26,23 @@ import {
   useProfile,
   useSettings,
 } from "@/lib/store";
+import {
+  clearSyncToken,
+  getSyncToken,
+  hydrateFromCloud,
+  queueSync,
+  setSyncToken,
+} from "@/lib/sync";
+import type { CloudPayload } from "@/lib/sync";
 
-type EditSheet = "profile" | "business" | "pin" | "erase" | null;
+type EditSheet = "profile" | "business" | "pin" | "erase" | "restore" | null;
 
 export default function SettingsPage() {
   const profile = useProfile();
   const settings = useSettings();
   const router = useRouter();
   const [sheet, setSheet] = useState<EditSheet>(null);
+  const hasSyncToken = typeof window !== "undefined" && !!getSyncToken();
 
   if (!profile) return null;
 
@@ -107,15 +112,49 @@ export default function SettingsPage() {
           />
         </SettingsGroup>
 
+        <SettingsGroup title="Cloud Sync">
+          {hasSyncToken ? (
+            <>
+              <SettingsRow
+                icon={
+                  <span className="size-5 text-[18px] leading-none">☁️</span>
+                }
+                label="Sync Now"
+                value="Push latest data"
+                onClick={() => queueSync()}
+              />
+              <SettingsRow
+                icon={
+                  <span className="size-5 text-[18px] leading-none">🔄</span>
+                }
+                label="Restore from Cloud"
+                value="Overwrite local data"
+                onClick={() => setSheet("restore")}
+              />
+            </>
+          ) : (
+            <SettingsRow
+              icon={<span className="size-5 text-[18px] leading-none">☁️</span>}
+              label="Cloud Sync"
+              value="Not connected"
+              disabled
+            />
+          )}
+        </SettingsGroup>
+
         <SettingsGroup title="Appearance">
           <SettingsRow
-            icon={<span className="size-5 rounded-full bg-primary inline-block" />}
+            icon={
+              <span className="size-5 rounded-full bg-primary inline-block" />
+            }
             label="Theme"
             value="Coming soon"
             disabled
           />
           <SettingsRow
-            icon={<span className="size-5 rounded-full bg-accent inline-block" />}
+            icon={
+              <span className="size-5 rounded-full bg-accent inline-block" />
+            }
             label="Brand Color"
             value="Coming soon"
             disabled
@@ -126,13 +165,18 @@ export default function SettingsPage() {
           <TrashIcon className="size-5" /> Log Out & Erase Data
         </Button>
         <p className="text-center text-[12px] text-ink-3 -mt-2">
-          StoreCount v1.0 · Your data is stored on this device
+          StoreCount v1.0 ·{" "}
+          {hasSyncToken ? "Data synced to cloud" : "Data stored on this device"}
         </p>
       </main>
 
       <ProfileSheet open={sheet === "profile"} onClose={() => setSheet(null)} />
-      <BusinessSheet open={sheet === "business"} onClose={() => setSheet(null)} />
+      <BusinessSheet
+        open={sheet === "business"}
+        onClose={() => setSheet(null)}
+      />
       <ChangePinSheet open={sheet === "pin"} onClose={() => setSheet(null)} />
+      <RestoreSheet open={sheet === "restore"} onClose={() => setSheet(null)} />
 
       <Sheet
         open={sheet === "erase"}
@@ -148,6 +192,7 @@ export default function SettingsPage() {
             full
             variant="danger"
             onClick={() => {
+              clearSyncToken();
               resetAllData();
               lockSession();
               router.replace("/");
@@ -205,14 +250,22 @@ function SettingsRow({
       </span>
       <span className="flex-1 font-semibold text-ink text-[15px]">{label}</span>
       {value && (
-        <span className="text-[14px] text-ink-3 truncate max-w-36">{value}</span>
+        <span className="text-[14px] text-ink-3 truncate max-w-36">
+          {value}
+        </span>
       )}
       {!disabled && <ChevronRightIcon className="size-4 text-ink-3 shrink-0" />}
     </button>
   );
 }
 
-function ProfileSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+function ProfileSheet({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   const profile = useProfile();
   const [form, setForm] = useState({
     firstName: profile?.firstName ?? "",
@@ -240,6 +293,7 @@ function ProfileSheet({ open, onClose }: { open: boolean; onClose: () => void })
                 }
               : p,
           );
+          queueSync();
           onClose();
         }}
       >
@@ -275,7 +329,13 @@ function ProfileSheet({ open, onClose }: { open: boolean; onClose: () => void })
   );
 }
 
-function BusinessSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+function BusinessSheet({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   const settings = useSettings();
   const [name, setName] = useState(settings.businessName);
 
@@ -286,6 +346,7 @@ function BusinessSheet({ open, onClose }: { open: boolean; onClose: () => void }
         onSubmit={(e) => {
           e.preventDefault();
           settingsStore.update((s) => ({ ...s, businessName: name.trim() }));
+          queueSync();
           onClose();
         }}
       >
@@ -306,7 +367,13 @@ function BusinessSheet({ open, onClose }: { open: boolean; onClose: () => void }
 
 type PinStep = "current" | "new" | "confirm";
 
-function ChangePinSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+function ChangePinSheet({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   const profile = useProfile();
   const [step, setStep] = useState<PinStep>("current");
   const [entry, setEntry] = useState("");
@@ -381,6 +448,79 @@ function ChangePinSheet({ open, onClose }: { open: boolean; onClose: () => void 
             {error ? "That's not right — try again." : titles[step]}
           </p>
           <PinInput value={entry} onChange={handleChange} error={error} />
+        </div>
+      )}
+    </Sheet>
+  );
+}
+
+function RestoreSheet({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>();
+  const [done, setDone] = useState(false);
+
+  async function handleRestore() {
+    const token = getSyncToken();
+    if (!token) return;
+    setLoading(true);
+    setError(undefined);
+    try {
+      const res = await fetch("/api/sync/pull", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.status === 401) {
+        // Token expired — clear it so the user knows they need to re-authenticate.
+        clearSyncToken();
+        setError("Session expired. Please erase data and sign in again.");
+        setLoading(false);
+        return;
+      }
+      if (!res.ok) {
+        setError("Could not reach the server. Check your connection.");
+        setLoading(false);
+        return;
+      }
+      const data = (await res.json()) as CloudPayload & { token?: string };
+      if (data.token) setSyncToken(data.token);
+      hydrateFromCloud(data);
+      setDone(true);
+      setTimeout(onClose, 1200);
+    } catch {
+      setError("Could not reach the server. Check your connection.");
+    }
+    setLoading(false);
+  }
+
+  return (
+    <Sheet open={open} onClose={onClose} title="Restore from Cloud">
+      {done ? (
+        <div className="flex flex-col items-center gap-3 py-8 animate-pop">
+          <span className="size-14 rounded-full bg-success-soft text-success flex items-center justify-center text-2xl">
+            ✓
+          </span>
+          <p className="font-semibold text-ink">Data restored</p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          <p className="text-[15px] text-ink-2">
+            This will replace all local products, sales, and settings with the
+            latest data from your cloud account.
+          </p>
+          {error && (
+            <p className="text-[14px] text-danger font-medium">{error}</p>
+          )}
+          <Button full onClick={handleRestore} disabled={loading}>
+            {loading ? "Restoring…" : "Restore now"}
+          </Button>
+          <Button full variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
         </div>
       )}
     </Sheet>

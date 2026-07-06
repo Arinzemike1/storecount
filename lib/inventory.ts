@@ -2,6 +2,7 @@
 
 import { round2 } from "./calc";
 import { createId, createSaleRef } from "./id";
+import { queueSync } from "./sync";
 import { productsStore, salesStore } from "./store";
 import type { Product, Sale, SaleItem } from "./types";
 
@@ -23,10 +24,14 @@ export function addProduct(input: ProductInput): Product {
     updatedAt: now,
   };
   productsStore.update((products) => [product, ...products]);
+  queueSync();
   return product;
 }
 
-export function updateProduct(id: string, changes: Partial<ProductInput>): void {
+export function updateProduct(
+  id: string,
+  changes: Partial<ProductInput>,
+): void {
   productsStore.update((products) =>
     products.map((product) =>
       product.id === id
@@ -34,12 +39,14 @@ export function updateProduct(id: string, changes: Partial<ProductInput>): void 
         : product,
     ),
   );
+  queueSync();
 }
 
 export function deleteProduct(id: string): void {
   productsStore.update((products) =>
     products.filter((product) => product.id !== id),
   );
+  queueSync();
 }
 
 export interface CartLine {
@@ -57,7 +64,8 @@ export function cartTotals(lines: CartLine[]): {
   let profit = 0;
   for (const line of lines) {
     total += line.product.sellingPrice * line.quantity;
-    profit += (line.product.sellingPrice - line.product.costPrice) * line.quantity;
+    profit +=
+      (line.product.sellingPrice - line.product.costPrice) * line.quantity;
     totalQuantity += line.quantity;
   }
   return { total: round2(total), totalQuantity, profit: round2(profit) };
@@ -99,5 +107,6 @@ export function checkout(lines: CartLine[]): Sale {
     }),
   );
   salesStore.update((sales) => [sale, ...sales]);
+  queueSync();
   return sale;
 }
