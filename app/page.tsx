@@ -46,7 +46,8 @@ export default function WelcomePage() {
           StoreCount
         </h1>
         <p className="text-[17px] text-ink-2 max-w-70 leading-snug">
-          Your shop&apos;s counter, stock book, and profit tracker — in your pocket.
+          Your shop&apos;s counter, stock book, and profit tracker — in your
+          pocket.
         </p>
       </div>
 
@@ -74,6 +75,12 @@ export default function WelcomePage() {
         >
           Get Started
         </Link>
+        <p className="text-center text-[14px] text-ink-2 mt-4">
+          Already have an account?{" "}
+          <Link href="/login" className="text-primary font-semibold">
+            Restore &amp; sign in
+          </Link>
+        </p>
       </div>
     </main>
   );

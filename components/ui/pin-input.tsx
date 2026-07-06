@@ -17,10 +17,19 @@ interface PinInputProps {
  * Big-target PIN entry: four dots plus an on-screen keypad.
  * Hardware keyboards work too (digits + backspace).
  */
-export function PinInput({ value, onChange, error = false, disabled = false }: PinInputProps) {
+export function PinInput({
+  value,
+  onChange,
+  error = false,
+  disabled = false,
+}: PinInputProps) {
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (disabled) return;
+      // Ignore hardware keyboard events when a text input/textarea has focus
+      // so typing a phone number (or any other field) doesn't also fill the PIN.
+      const tag = (document.activeElement as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
       if (/^\d$/.test(event.key) && value.length < PIN_LENGTH) {
         onChange(value + event.key);
       } else if (event.key === "Backspace") {
@@ -58,7 +67,11 @@ export function PinInput({ value, onChange, error = false, disabled = false }: P
 
       <div className="grid grid-cols-3 gap-3 w-full max-w-70">
         {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((digit) => (
-          <KeypadButton key={digit} onClick={() => press(digit)} disabled={disabled}>
+          <KeypadButton
+            key={digit}
+            onClick={() => press(digit)}
+            disabled={disabled}
+          >
             {digit}
           </KeypadButton>
         ))}

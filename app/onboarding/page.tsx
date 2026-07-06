@@ -8,6 +8,7 @@ import { ArrowLeftIcon } from "@/components/ui/icons";
 import { PIN_LENGTH, PinInput } from "@/components/ui/pin-input";
 import { createPinCredential, unlockSession } from "@/lib/auth";
 import { profileStore } from "@/lib/store";
+import { setSyncToken } from "@/lib/sync";
 
 const TOTAL_STEPS = 4;
 
@@ -33,6 +34,7 @@ export default function OnboardingPage() {
   const [confirming, setConfirming] = useState(false);
   const [pinError, setPinError] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [registerConflict, setRegisterConflict] = useState(false);
 
   const setField = (field: keyof Draft) => (value: string) => {
     setDraft((d) => ({ ...d, [field]: value }));
@@ -41,7 +43,8 @@ export default function OnboardingPage() {
 
   function continueFromName() {
     const next: Partial<Draft> = {};
-    if (!draft.firstName.trim()) next.firstName = "Please enter your first name";
+    if (!draft.firstName.trim())
+      next.firstName = "Please enter your first name";
     if (!draft.lastName.trim()) next.lastName = "Please enter your last name";
     setErrors(next);
     if (!next.firstName && !next.lastName) setStep(2);
@@ -92,6 +95,33 @@ export default function OnboardingPage() {
       createdAt: new Date().toISOString(),
     });
     unlockSession();
+
+    // Register the account in the cloud. This is best-effort — the app
+    // works fully offline if it fails.
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: draft.firstName.trim(),
+          lastName: draft.lastName.trim(),
+          email: draft.email.trim(),
+          phone: draft.phone.trim(),
+          pinSalt: credential.salt,
+          pinHash: credential.hash,
+          pinIterations: credential.iterations,
+        }),
+      });
+      if (res.ok) {
+        const { token } = (await res.json()) as { token: string };
+        setSyncToken(token);
+      } else if (res.status === 409) {
+        setRegisterConflict(true);
+      }
+    } catch {
+      // Network unavailable — user can sync later via Settings.
+    }
+
     setSaving(false);
     setStep(4);
   }
@@ -118,7 +148,10 @@ export default function OnboardingPage() {
           >
             <ArrowLeftIcon className="size-6" />
           </button>
-          <div className="flex-1 flex gap-1.5" aria-label={`Step ${step} of ${TOTAL_STEPS}`}>
+          <div
+            className="flex-1 flex gap-1.5"
+            aria-label={`Step ${step} of ${TOTAL_STEPS}`}
+          >
             {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
               <span
                 key={i}
@@ -132,7 +165,10 @@ export default function OnboardingPage() {
       )}
 
       {step === 1 && (
-        <section key={1} className="flex-1 flex flex-col px-6 pt-6 animate-fade-up">
+        <section
+          key={1}
+          className="flex-1 flex flex-col px-6 pt-6 animate-fade-up"
+        >
           <h1 className="text-[26px] font-bold tracking-tight text-ink">
             What&apos;s your name?
           </h1>
@@ -167,7 +203,10 @@ export default function OnboardingPage() {
       )}
 
       {step === 2 && (
-        <section key={2} className="flex-1 flex flex-col px-6 pt-6 animate-fade-up">
+        <section
+          key={2}
+          className="flex-1 flex flex-col px-6 pt-6 animate-fade-up"
+        >
           <h1 className="text-[26px] font-bold tracking-tight text-ink">
             How can we reach you?
           </h1>
@@ -190,6 +229,7 @@ export default function OnboardingPage() {
               label="Phone Number"
               type="tel"
               inputMode="tel"
+              maxLength={11}
               value={draft.phone}
               onChange={(e) => setField("phone")(e.target.value)}
               error={errors.phone}
@@ -232,7 +272,15 @@ export default function OnboardingPage() {
       {step === 4 && (
         <section className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-4">
           <span className="size-24 rounded-full bg-success-soft text-success flex items-center justify-center animate-pop">
-            <svg viewBox="0 0 24 24" className="size-12" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              className="size-12"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.4}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="m5 12.5 4.5 4.5L19 7" className="animate-draw-check" />
             </svg>
           </span>
@@ -242,6 +290,24 @@ export default function OnboardingPage() {
           <p className="text-[15px] text-ink-2 max-w-70">
             Add your first products and start recording sales.
           </p>
+          {registerConflict && (
+            <div className="w-full rounded-card bg-warning-soft border border-warning px-4 py-3 text-left text-[14px] text-ink-2">
+              <p className="font-semibold text-ink mb-1">
+                Phone number already registered
+              </p>
+              <p>
+                This phone is linked to an existing account. To restore your
+                previous data,{" "}
+                <button
+                  onClick={() => router.replace("/login")}
+                  className="text-primary font-semibold underline"
+                >
+                  sign in instead
+                </button>
+                .
+              </p>
+            </div>
+          )}
           <div className="w-full pt-8 pb-6">
             <Button full onClick={() => router.replace("/dashboard")}>
               Start Using StoreCount
