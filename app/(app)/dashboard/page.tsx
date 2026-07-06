@@ -50,7 +50,7 @@ export default function DashboardPage() {
       <header className="pt-5 flex items-center justify-between">
         <div>
           <p className="text-[15px] text-ink-2">{greeting()},</p>
-          <h1 className="text-[24px] font-bold tracking-tight text-ink leading-tight">
+          <h1 className="text-[24px] font-bold capitalize tracking-tight text-ink leading-tight">
             {profile?.firstName ?? "there"}
             {settings.businessName ? ` · ${settings.businessName}` : ""}
           </h1>
@@ -75,7 +75,6 @@ export default function DashboardPage() {
           label="Total Profit"
           value={money(allTime.profit)}
           icon={<WalletIcon className="size-5" />}
-          tone="accent"
         />
         <StatCard
           label="Sales Today"
@@ -88,7 +87,6 @@ export default function DashboardPage() {
           value={String(week.count)}
           sub={week.count > 0 ? money(week.revenue) : "No sales this week"}
           icon={<ReceiptIcon className="size-5" />}
-          tone="accent"
         />
         <StatCard
           label="Products"

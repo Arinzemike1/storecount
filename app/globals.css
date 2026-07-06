@@ -8,9 +8,9 @@
  * ------------------------------------------------------------------------- */
 :root {
   /* Brand */
-  --color-primary: #0e9f6e;
-  --color-primary-deep: #057a55;
-  --color-primary-soft: #e6f7f0;
+  --color-primary: #1c4b36;
+  --color-primary-deep: #163c2b;
+  --color-primary-soft: #e8f2ec;
   --color-on-primary: #ffffff;
 
   /* Secondary accent (used sparingly for highlights) */
@@ -18,22 +18,22 @@
   --color-accent-soft: #e8f0fe;
 
   /* Canvas */
-  --color-bg: #f4f7f6;
+  --color-bg: #f7f7f4;
   --color-surface: #ffffff;
-  --color-surface-2: #f8faf9;
+  --color-surface-2: #f3f3f0;
 
   /* Lines */
-  --color-border: #e6ebe9;
-  --color-border-strong: #d2dad6;
+  --color-border: #e6e6e1;
+  --color-border-strong: #d0d0ca;
 
   /* Text */
-  --color-ink: #16221d;
-  --color-ink-2: #5c6b64;
-  --color-ink-3: #93a19a;
+  --color-ink: #15171b;
+  --color-ink-2: #7a7d74;
+  --color-ink-3: #a8ab9f;
 
   /* Feedback */
-  --color-success: #0e9f6e;
-  --color-success-soft: #e6f7f0;
+  --color-success: #1c4b36;
+  --color-success-soft: #e8f2ec;
   --color-warning: #c27803;
   --color-warning-soft: #fdf3e0;
   --color-danger: #e02424;
@@ -42,8 +42,9 @@
   /* Shape & elevation */
   --radius-card: 1.25rem;
   --radius-control: 0.875rem;
-  --shadow-card: 0 1px 2px rgb(22 34 29 / 0.04), 0 4px 16px rgb(22 34 29 / 0.05);
-  --shadow-float: 0 8px 30px rgb(22 34 29 / 0.16);
+  --shadow-card:
+    0 1px 2px rgb(21 23 27 / 0.04), 0 4px 16px rgb(21 23 27 / 0.05);
+  --shadow-float: 0 8px 30px rgb(21 23 27 / 0.16);
 }
 
 @theme inline {
