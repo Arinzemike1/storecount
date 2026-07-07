@@ -70,28 +70,33 @@ export default function DashboardPage() {
           label="Total Revenue"
           value={money(allTime.revenue)}
           icon={<TrendUpIcon className="size-5" />}
+          gradient="linear-gradient(135deg, #1c4b36, #059669)"
         />
         <StatCard
           label="Total Profit"
           value={money(allTime.profit)}
           icon={<WalletIcon className="size-5" />}
+          gradient="linear-gradient(135deg, #7c3aed, #db2777)"
         />
         <StatCard
           label="Sales Today"
           value={String(today.count)}
           sub={today.count > 0 ? money(today.revenue) : "No sales yet today"}
           icon={<CartIcon className="size-5" />}
+          gradient="linear-gradient(135deg, #ea580c, #f59e0b)"
         />
         <StatCard
           label="Sales This Week"
           value={String(week.count)}
           sub={week.count > 0 ? money(week.revenue) : "No sales this week"}
           icon={<ReceiptIcon className="size-5" />}
+          gradient="linear-gradient(135deg, #2563eb, #0891b2)"
         />
         <StatCard
           label="Products"
           value={String(products.length)}
           icon={<BoxIcon className="size-5" />}
+          gradient="linear-gradient(135deg, #0d9488, #65a30d)"
         />
         <StatCard
           label="Needs Restock"
@@ -111,6 +116,7 @@ export default function DashboardPage() {
                 ? "warning"
                 : "primary"
           }
+          gradient="linear-gradient(135deg, #e11d48, #9333ea)"
         />
       </section>
 
