@@ -2,16 +2,16 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "StoreCount",
-    short_name: "StoreCount",
+    name: "Store Count",
+    short_name: "Store Count",
     description:
       "Track your products, record sales in seconds, and see your profit instantly.",
     id: "/",
     start_url: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#f4f7f6",
-    theme_color: "#f4f7f6",
+    background_color: "#f7f7f4",
+    theme_color: "#1c4b36",
     categories: ["business", "finance", "productivity"],
     icons: [
       {

@@ -41,10 +41,10 @@ export default function WelcomePage() {
   return (
     <main className="flex-1 flex flex-col mx-auto w-full max-w-md px-6 pt-safe pb-safe">
       {/* Hero */}
-      <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 py-10 animate-fade-up">
+      <div className="flex flex-col items-center text-center gap-3 pt-14 pb-8 animate-fade-up">
         <Logo size={52} />
         <h1 className="text-[32px] font-bold tracking-tight text-ink mt-1">
-          StoreCount
+          Store Count
         </h1>
         <p className="text-[17px] text-ink-2 max-w-72 leading-snug">
           Count stock, track sales, and know your <em>profit</em> — all in one
@@ -72,7 +72,7 @@ export default function WelcomePage() {
         ))}
       </div>
 
-      <div className="pt-6 pb-10">
+      <div className="mt-auto pt-6 pb-10">
         <Link
           href="/onboarding"
           className="flex items-center justify-center h-14 w-full rounded-control bg-primary text-on-primary text-[17px] font-semibold active:scale-[0.98] active:bg-primary-deep transition-all"

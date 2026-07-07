@@ -165,7 +165,7 @@ export default function SettingsPage() {
           <TrashIcon className="size-5" /> Log Out & Erase Data
         </Button>
         <p className="text-center text-[12px] text-ink-3 -mt-2">
-          StoreCount v1.0 ·{" "}
+          Store Count v1.0 ·{" "}
           {hasSyncToken ? "Data synced to cloud" : "Data stored on this device"}
         </p>
       </main>

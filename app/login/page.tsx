@@ -194,7 +194,7 @@ export default function LoginPage() {
           <>
             <Logo size={64} />
             <h1 className="text-[26px] font-bold tracking-tight text-ink mt-2">
-              Sign in to StoreCount
+              Sign in to Store Count
             </h1>
             <p className="text-[15px] text-ink-2">
               {pinError
