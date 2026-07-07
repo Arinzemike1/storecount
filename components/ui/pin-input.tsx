@@ -100,7 +100,7 @@ function KeypadButton({
   return (
     <button
       type="button"
-      className="h-16 rounded-card bg-surface text-2xl font-medium text-ink shadow-card border border-border transition-transform active:scale-95 active:bg-surface-2 flex items-center justify-center disabled:opacity-50"
+      className="h-16 w-16 rounded-card bg-surface text-2xl font-medium text-ink shadow-card border border-border transition-transform active:scale-95 active:bg-surface-2 flex items-center justify-center disabled:opacity-50"
       {...props}
     >
       {children}
