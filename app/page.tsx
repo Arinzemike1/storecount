@@ -39,7 +39,7 @@ export default function WelcomePage() {
   if (!hydrated || profile) return null;
 
   return (
-    <main className="flex-1 flex flex-col mx-auto w-full max-w-md px-6 pt-safe pb-safe">
+    <main className="flex flex-col my-auto mx-auto w-full max-w-md px-6">
       {/* Hero */}
       <div className="flex flex-col items-center text-center gap-3 pt-14 pb-8 animate-fade-up">
         <Logo size={52} />
@@ -72,7 +72,7 @@ export default function WelcomePage() {
         ))}
       </div>
 
-      <div className="mt-auto pt-6 pb-10">
+      <div className="mt-auto pt-16 pb-10">
         <Link
           href="/onboarding"
           className="flex items-center justify-center h-14 w-full rounded-control bg-primary text-on-primary text-[17px] font-semibold active:scale-[0.98] active:bg-primary-deep transition-all"
