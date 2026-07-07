@@ -1,5 +1,5 @@
 /*
- * StoreCount service worker.
+ * Store Count service worker.
  * - Navigations: network-first, falling back to the cached page (or the app
  *   shell at "/") so the app opens offline. All business data lives on-device,
  *   so a cached shell means a fully working app.

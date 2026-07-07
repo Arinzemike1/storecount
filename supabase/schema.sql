@@ -1,4 +1,4 @@
--- StoreCount — Supabase schema
+-- Store Count — Supabase schema
 -- Run this in your Supabase project's SQL editor (Database → SQL editor).
 
 create table if not exists users (

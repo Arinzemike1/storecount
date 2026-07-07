@@ -15,16 +15,16 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "StoreCount",
-    template: "%s · StoreCount",
+    default: "Store Count",
+    template: "%s · Store Count",
   },
   description:
     "Track your products, record sales in seconds, and see your profit instantly.",
-  applicationName: "StoreCount",
+  applicationName: "Store Count",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "StoreCount",
+    title: "Store Count",
   },
   formatDetection: {
     telephone: false,

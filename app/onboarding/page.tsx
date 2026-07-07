@@ -258,7 +258,7 @@ export default function OnboardingPage() {
               ? "Those PINs didn't match — try again."
               : confirming
                 ? "Enter the same PIN one more time."
-                : "You'll use this PIN to unlock StoreCount."}
+                : "You'll use this PIN to unlock Store Count."}
           </p>
           <PinInput
             value={confirming ? confirmPin : pin}
@@ -319,7 +319,7 @@ export default function OnboardingPage() {
           )}
           <div className="w-full pt-8 pb-6">
             <Button full onClick={() => router.replace("/dashboard")}>
-              Start Using StoreCount
+              Start Using Store Count
             </Button>
           </div>
         </section>

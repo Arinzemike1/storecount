@@ -1,5 +1,5 @@
 /**
- * Generates all StoreCount app icons as PNGs with zero dependencies.
+ * Generates all Store Count app icons as PNGs with zero dependencies.
  * The mark matches components/ui/icons.tsx `Logo`: brand-green square
  * with three rising white bars.
  *
@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 /* Brand values — keep in sync with app/globals.css */
-const PRIMARY = [14, 159, 110]; // #0e9f6e
+const PRIMARY = [28, 75, 54]; // #1c4b36
 const WHITE = [255, 255, 255];
 
 /* ------------------------------ PNG encoding ------------------------------ */

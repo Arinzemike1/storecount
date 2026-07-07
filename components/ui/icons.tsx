@@ -214,7 +214,7 @@ export const BackspaceIcon = (props: IconProps) => (
   </Icon>
 );
 
-/** StoreCount brand mark — rounded square with rising tally bars. */
+/** Store Count brand mark — rounded square with rising tally bars. */
 export function Logo({ size = 56 }: { size?: number }) {
   return (
     <svg
