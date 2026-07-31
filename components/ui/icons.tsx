@@ -135,6 +135,13 @@ export const ReceiptIcon = (props: IconProps) => (
   </Icon>
 );
 
+export const ClockIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7.5V12l3 2" />
+  </Icon>
+);
+
 export const AlertIcon = (props: IconProps) => (
   <Icon {...props}>
     <path d="M12 3 1.8 20.2h20.4L12 3Z" />

@@ -35,6 +35,23 @@ export interface Sale {
   createdAt: string;
 }
 
+/**
+ * A sale held for a customer who promised to pay later. Unlike a Sale it does
+ * NOT reduce stock — it is a saved draft that can be resumed, edited, then
+ * either completed (becomes a Sale) or discarded.
+ */
+export interface PendingSale {
+  id: string;
+  ref: string;
+  items: SaleItem[];
+  totalQuantity: number;
+  total: number;
+  /** Optional label for who owes — a name, phone, or nickname. */
+  customerName?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface PinCredential {
   salt: string;
   hash: string;

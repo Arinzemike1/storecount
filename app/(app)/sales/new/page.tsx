@@ -1,13 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
 import { ProductImage } from "@/components/ui/product-image";
 import {
   BoxIcon,
+  ClockIcon,
   MinusIcon,
   PlusIcon,
   SearchIcon,
@@ -15,20 +16,66 @@ import {
 } from "@/components/ui/icons";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatMoney } from "@/lib/format";
-import { cartTotals, checkout, type CartLine } from "@/lib/inventory";
-import { useProducts, useSettings } from "@/lib/store";
+import {
+  cartTotals,
+  checkout,
+  checkoutPendingSale,
+  discardPendingSale,
+  savePendingSale,
+  type CartLine,
+} from "@/lib/inventory";
+import { usePendingSales, useProducts, useSettings } from "@/lib/store";
 import type { Product } from "@/lib/types";
 
 export default function NewSalePage() {
+  return (
+    <Suspense>
+      <NewSale />
+    </Suspense>
+  );
+}
+
+function NewSale() {
   const router = useRouter();
   const products = useProducts();
   const settings = useSettings();
+  const pendingSales = usePendingSales();
+  const pendingId = useSearchParams().get("pending");
   const [query, setQuery] = useState("");
   const [cart, setCart] = useState<Map<string, number>>(new Map());
+  const [customerName, setCustomerName] = useState("");
   const [reviewing, setReviewing] = useState(false);
-  const [completing, setCompleting] = useState(false);
+  const [busy, setBusy] = useState<null | "complete" | "pend">(null);
+  const [resumedId, setResumedId] = useState<string | null>(null);
+  // Quantities this hold already took off the shelf. They stay available to
+  // this customer, so effective stock = live stock + reserved.
+  const [reserved, setReserved] = useState<Map<string, number>>(new Map());
 
   const money = (amount: number) => formatMoney(amount, settings);
+
+  // Resume a held sale exactly once, after its record hydrates on the client.
+  // Adjusting state during render (rather than in an effect) keeps the first
+  // paint in sync with the server and avoids a cascading re-render.
+  if (pendingId && resumedId !== pendingId) {
+    const pending = pendingSales.find((p) => p.id === pendingId);
+    if (pending) {
+      // Load the reserved quantities, dropping products that no longer exist.
+      const next = new Map<string, number>();
+      for (const item of pending.items) {
+        if (!products.some((p) => p.id === item.productId)) continue;
+        next.set(item.productId, item.quantity);
+      }
+      setResumedId(pendingId);
+      setCart(next);
+      setReserved(next);
+      setCustomerName(pending.customerName ?? "");
+    }
+  }
+
+  // Units sellable to this order: on-shelf stock plus anything this hold has
+  // already reserved for the customer.
+  const maxFor = (product: Product) =>
+    product.quantity + (reserved.get(product.id) ?? 0);
 
   const sellable = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -59,7 +106,7 @@ export default function NewSalePage() {
   function setQuantity(product: Product, quantity: number) {
     setCart((current) => {
       const next = new Map(current);
-      const capped = Math.min(Math.max(0, quantity), product.quantity);
+      const capped = Math.min(Math.max(0, quantity), maxFor(product));
       if (capped <= 0) next.delete(product.id);
       else next.set(product.id, capped);
       return next;
@@ -67,10 +114,25 @@ export default function NewSalePage() {
   }
 
   function completeSale() {
-    if (lines.length === 0 || completing) return;
-    setCompleting(true);
-    const sale = checkout(lines);
+    if (lines.length === 0 || busy) return;
+    setBusy("complete");
+    const sale = pendingId
+      ? checkoutPendingSale(pendingId, lines)
+      : checkout(lines);
     router.replace(`/sales/${sale.id}?new=1`);
+  }
+
+  function pendSale() {
+    if (lines.length === 0 || busy) return;
+    setBusy("pend");
+    savePendingSale(lines, customerName, pendingId ?? undefined);
+    router.replace("/sales");
+  }
+
+  function discardPending() {
+    if (!pendingId || busy) return;
+    discardPendingSale(pendingId);
+    router.replace("/sales");
   }
 
   return (
@@ -79,7 +141,7 @@ export default function NewSalePage() {
       <header className="sticky top-0 z-30 bg-bg/90 backdrop-blur pt-safe">
         <div className="flex items-center gap-3 px-5 h-14">
           <h1 className="text-[22px] font-bold tracking-tight text-ink flex-1">
-            New Sale
+            {pendingId ? "Resume Sale" : "New Sale"}
           </h1>
           <button
             onClick={() => router.back()}
@@ -89,6 +151,17 @@ export default function NewSalePage() {
             <XIcon className="size-5" />
           </button>
         </div>
+        {pendingId && (
+          <div className="px-5 pb-3">
+            <div className="flex items-center gap-2 rounded-control bg-warning-soft text-warning px-4 h-11 text-[14px] font-medium">
+              <ClockIcon className="size-4 shrink-0" />
+              <span className="truncate">
+                Held sale{customerName ? ` · ${customerName}` : ""} — edit, then
+                complete or update.
+              </span>
+            </div>
+          </div>
+        )}
         {products.length > 0 && (
           <div className="px-5 pb-3">
             <div className="flex items-center gap-2.5 bg-surface border border-border-strong rounded-control px-4 h-12 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15 transition-colors">
@@ -128,7 +201,8 @@ export default function NewSalePage() {
           <div className="flex flex-col gap-2">
             {sellable.map((product) => {
               const inCart = cart.get(product.id) ?? 0;
-              const soldOut = inCart >= product.quantity;
+              const available = maxFor(product);
+              const soldOut = inCart >= available;
               return (
                 <div
                   key={product.id}
@@ -148,8 +222,7 @@ export default function NewSalePage() {
                         {product.name}
                       </p>
                       <p className="text-[13px] text-ink-3">
-                        {money(product.sellingPrice)} ·{" "}
-                        {product.quantity - inCart} left
+                        {money(product.sellingPrice)} · {available - inCart} left
                       </p>
                     </div>
                   </button>
@@ -206,7 +279,7 @@ export default function NewSalePage() {
                 </p>
               </div>
               <Button size="md" onClick={() => setReviewing(true)}>
-                Checkout
+                Review
               </Button>
             </div>
           </div>
@@ -217,7 +290,7 @@ export default function NewSalePage() {
       <Sheet
         open={reviewing}
         onClose={() => setReviewing(false)}
-        title="Confirm sale"
+        title={pendingId ? "Resume sale" : "Confirm sale"}
       >
         <div className="divide-y divide-border">
           {lines.map(({ product, quantity }) => (
@@ -240,9 +313,51 @@ export default function NewSalePage() {
             {money(totals.total)}
           </p>
         </div>
-        <Button full onClick={completeSale} loading={completing}>
-          Complete Sale
-        </Button>
+
+        {/* Optional customer label for a hold */}
+        <label className="flex flex-col gap-1.5 mb-4">
+          <span className="text-sm font-medium text-ink-2">
+            Customer{" "}
+            <span className="text-ink-3 font-normal">
+              (for pay-later holds)
+            </span>
+          </span>
+          <input
+            type="text"
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+            placeholder="Name or phone — optional"
+            className="h-13 w-full bg-surface border border-border-strong rounded-control px-4 text-[16px] text-ink placeholder:text-ink-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-colors"
+          />
+        </label>
+
+        <div className="flex flex-col gap-2.5">
+          <div className="flex items-stretch gap-2.5">
+            <Button
+              full
+              variant="secondary"
+              onClick={pendSale}
+              loading={busy === "pend"}
+              className="flex-1"
+            >
+              <ClockIcon className="size-5" />
+              {pendingId ? "Update hold" : "Save for later"}
+            </Button>
+            <Button
+              full
+              onClick={completeSale}
+              loading={busy === "complete"}
+              className="flex-1"
+            >
+              Complete Sale
+            </Button>
+          </div>
+          {pendingId && (
+            <Button full variant="danger-soft" onClick={discardPending}>
+              Discard hold
+            </Button>
+          )}
+        </div>
       </Sheet>
     </div>
   );

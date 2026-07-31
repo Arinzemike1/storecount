@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       .single(),
     db
       .from("user_data")
-      .select("products, sales, settings")
+      .select("products, sales, pending_sales, settings")
       .eq("user_id", userId)
       .maybeSingle(),
   ]);
@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
   const d = dataResult.data ?? {
     products: [],
     sales: [],
+    pending_sales: [],
     settings: DEFAULT_SETTINGS,
   };
 
@@ -46,6 +47,7 @@ export async function GET(request: NextRequest) {
     },
     products: d.products ?? [],
     sales: d.sales ?? [],
+    pendingSales: d.pending_sales ?? [],
     settings: d.settings ?? DEFAULT_SETTINGS,
   });
 }

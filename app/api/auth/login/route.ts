@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
   // Fetch or lazily create the user_data row.
   let { data: userData } = await db
     .from("user_data")
-    .select("products, sales, settings")
+    .select("products, sales, pending_sales, settings")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -100,9 +100,15 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
       products: [],
       sales: [],
+      pending_sales: [],
       settings: DEFAULT_SETTINGS,
     });
-    userData = { products: [], sales: [], settings: DEFAULT_SETTINGS };
+    userData = {
+      products: [],
+      sales: [],
+      pending_sales: [],
+      settings: DEFAULT_SETTINGS,
+    };
   }
 
   return Response.json({
@@ -121,6 +127,7 @@ export async function POST(request: NextRequest) {
     },
     products: userData.products ?? [],
     sales: userData.sales ?? [],
+    pendingSales: userData.pending_sales ?? [],
     settings: userData.settings ?? DEFAULT_SETTINGS,
   });
 }

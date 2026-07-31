@@ -5,6 +5,7 @@ import { localStorageAdapter, type StorageAdapter } from "./storage";
 import {
   DEFAULT_SETTINGS,
   type AppSettings,
+  type PendingSale,
   type Product,
   type Sale,
   type UserProfile,
@@ -60,6 +61,7 @@ export class Store<T> {
 
 export const productsStore = new Store<Product[]>("products", []);
 export const salesStore = new Store<Sale[]>("sales", []);
+export const pendingSalesStore = new Store<PendingSale[]>("pendingSales", []);
 export const profileStore = new Store<UserProfile | null>("profile", null);
 export const settingsStore = new Store<AppSettings>("settings", DEFAULT_SETTINGS);
 
@@ -77,6 +79,10 @@ export function useProducts(): Product[] {
 
 export function useSales(): Sale[] {
   return useStore(salesStore);
+}
+
+export function usePendingSales(): PendingSale[] {
+  return useStore(pendingSalesStore);
 }
 
 export function useProfile(): UserProfile | null {
@@ -105,6 +111,7 @@ export function useHydrated(): boolean {
 export function resetAllData(): void {
   productsStore.reset();
   salesStore.reset();
+  pendingSalesStore.reset();
   profileStore.reset();
   settingsStore.reset();
 }

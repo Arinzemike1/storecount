@@ -19,8 +19,16 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { products, sales, settings, firstName, lastName, email, phone } =
-    (body ?? {}) as Record<string, unknown>;
+  const {
+    products,
+    sales,
+    pendingSales,
+    settings,
+    firstName,
+    lastName,
+    email,
+    phone,
+  } = (body ?? {}) as Record<string, unknown>;
 
   // Keep the users row in sync with any profile changes.
   const profileUpdate: Record<string, unknown> = {
@@ -41,6 +49,7 @@ export async function POST(request: NextRequest) {
       user_id: userId,
       products: Array.isArray(products) ? products : [],
       sales: Array.isArray(sales) ? sales : [],
+      pending_sales: Array.isArray(pendingSales) ? pendingSales : [],
       settings: settings && typeof settings === "object" ? settings : {},
       updated_at: new Date().toISOString(),
     },

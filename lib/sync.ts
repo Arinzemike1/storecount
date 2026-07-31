@@ -4,10 +4,17 @@ import { localStorageAdapter } from "./storage";
 import {
   productsStore,
   salesStore,
+  pendingSalesStore,
   settingsStore,
   profileStore,
 } from "./store";
-import type { AppSettings, Product, Sale, UserProfile } from "./types";
+import type {
+  AppSettings,
+  PendingSale,
+  Product,
+  Sale,
+  UserProfile,
+} from "./types";
 
 const TOKEN_KEY = "sync-token";
 
@@ -51,6 +58,7 @@ async function pushToCloud(): Promise<void> {
       body: JSON.stringify({
         products: productsStore.get(),
         sales: salesStore.get(),
+        pendingSales: pendingSalesStore.get(),
         settings: settingsStore.get(),
         firstName: profile.firstName,
         lastName: profile.lastName,
@@ -67,6 +75,7 @@ export interface CloudPayload {
   profile: Omit<UserProfile, "deviceRemembered">;
   products: Product[];
   sales: Sale[];
+  pendingSales: PendingSale[];
   settings: AppSettings;
 }
 
@@ -77,6 +86,7 @@ export interface CloudPayload {
 export function hydrateFromCloud(data: CloudPayload): void {
   productsStore.set(data.products);
   salesStore.set(data.sales);
+  pendingSalesStore.set(data.pendingSales ?? []);
   settingsStore.set(data.settings);
   // deviceRemembered is a per-device flag — start false, let login page set it.
   profileStore.set({ ...data.profile, deviceRemembered: false });
