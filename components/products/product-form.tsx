@@ -1,12 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/input";
 import { CameraIcon, XIcon } from "@/components/ui/icons";
+import { Toggle } from "@/components/ui/toggle";
 import { profitPerUnit, round2 } from "@/lib/calc";
 import { formatMoney } from "@/lib/format";
 import { fileToProductImage } from "@/lib/image";
+import { useStorefront } from "@/lib/orders";
 import { useProducts, useSettings } from "@/lib/store";
 import type { Product } from "@/lib/types";
 import type { ProductInput } from "@/lib/inventory";
@@ -20,11 +23,14 @@ interface ProductFormProps {
 export function ProductForm({ initial, submitLabel, onSubmit }: ProductFormProps) {
   const settings = useSettings();
   const products = useProducts();
+  const storefront = useStorefront();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState(initial?.name ?? "");
   const [image, setImage] = useState<string | undefined>(initial?.image);
   const [category, setCategory] = useState(initial?.category ?? "");
+  const [published, setPublished] = useState(initial?.published ?? false);
+  const [description, setDescription] = useState(initial?.description ?? "");
   const [costPrice, setCostPrice] = useState(
     initial ? String(initial.costPrice) : "",
   );
@@ -72,6 +78,8 @@ export function ProductForm({ initial, submitLabel, onSubmit }: ProductFormProps
       name: name.trim(),
       image,
       category: category.trim() || undefined,
+      description: description.trim() || undefined,
+      published: storefront ? published : undefined,
       costPrice: round2(cost),
       sellingPrice: round2(price),
       quantity: qty,
@@ -219,6 +227,57 @@ export function ProductForm({ initial, submitLabel, onSubmit }: ProductFormProps
         error={errors.quantity}
         placeholder="0"
       />
+
+      {/* Storefront publishing */}
+      <div className="rounded-control border border-border-strong bg-surface">
+        <div className="flex items-center justify-between gap-3 px-4 py-3.5">
+          <div className="min-w-0">
+            <p className="text-[15px] font-semibold text-ink">Sell online</p>
+            <p className="text-[13px] text-ink-3">
+              {storefront
+                ? "Show this product in your online store"
+                : "Set up your online store in Settings first"}
+            </p>
+          </div>
+          {storefront ? (
+            <Toggle
+              label="Sell online"
+              checked={published}
+              onChange={setPublished}
+            />
+          ) : (
+            <Link
+              href="/settings"
+              className="text-[13px] font-semibold text-primary shrink-0"
+            >
+              Set up
+            </Link>
+          )}
+        </div>
+
+        {storefront && published && (
+          <div className="border-t border-border px-4 py-3.5 animate-fade-in">
+            <label
+              htmlFor="storefront-description"
+              className="text-[13px] font-medium text-ink-2"
+            >
+              Storefront description (optional)
+            </label>
+            <textarea
+              id="storefront-description"
+              value={description}
+              maxLength={280}
+              rows={3}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Tell customers what makes this worth buying"
+              className="mt-1.5 w-full rounded-xl border border-border-strong bg-surface px-3 py-2.5 text-[15px] text-ink placeholder:text-ink-3 outline-none focus:border-primary resize-none"
+            />
+            <p className="mt-1 text-right text-[11px] text-ink-3">
+              {description.length}/280
+            </p>
+          </div>
+        )}
+      </div>
 
       <div className="pt-2">
         <Button full type="submit">

@@ -8,13 +8,15 @@ import { StockBadge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProductImage } from "@/components/ui/product-image";
 import { Button } from "@/components/ui/button";
-import { BoxIcon, PlusIcon, SearchIcon } from "@/components/ui/icons";
+import { BoxIcon, PlusIcon, SearchIcon, StoreIcon } from "@/components/ui/icons";
 import { stockStatus } from "@/lib/calc";
 import { formatMoney } from "@/lib/format";
+import { updateProduct } from "@/lib/inventory";
+import { useStorefront } from "@/lib/orders";
 import { useProducts, useSettings } from "@/lib/store";
 import type { StockStatus } from "@/lib/types";
 
-type Filter = "all" | StockStatus;
+type Filter = "all" | StockStatus | "online";
 
 const filters: { id: Filter; label: string }[] = [
   { id: "all", label: "All" },
@@ -26,13 +28,18 @@ const filters: { id: Filter; label: string }[] = [
 export default function ProductsPage() {
   const products = useProducts();
   const settings = useSettings();
+  const storefront = useStorefront();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  const [selecting, setSelecting] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     return products.filter((product) => {
-      if (filter !== "all" && stockStatus(product, settings) !== filter) {
+      if (filter === "online") {
+        if (!product.published) return false;
+      } else if (filter !== "all" && stockStatus(product, settings) !== filter) {
         return false;
       }
       if (!q) return true;
@@ -42,6 +49,26 @@ export default function ProductsPage() {
       );
     });
   }, [products, settings, query, filter]);
+
+  // Publishing 40 products one form at a time is a real onboarding cliff.
+  const chips = storefront
+    ? [...filters, { id: "online" as Filter, label: "Sell online" }]
+    : filters;
+
+  function toggleSelected(id: string) {
+    setSelected((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function applyPublish(published: boolean) {
+    for (const id of selected) updateProduct(id, { published });
+    setSelected(new Set());
+    setSelecting(false);
+  }
 
   return (
     <>
@@ -86,8 +113,8 @@ export default function ProductsPage() {
             </div>
 
             {/* Stock filter chips */}
-            <div className="flex gap-2 overflow-x-auto -mx-5 px-5 pb-1 [scrollbar-width:none]">
-              {filters.map(({ id, label }) => (
+            <div className="flex gap-2 overflow-x-auto -mx-5 px-5 pb-1 scrollbar-none">
+              {chips.map(({ id, label }) => (
                 <button
                   key={id}
                   onClick={() => setFilter(id)}
@@ -102,6 +129,25 @@ export default function ProductsPage() {
               ))}
             </div>
 
+            {storefront && (
+              <div className="flex items-center justify-between gap-3 -mt-1">
+                <p className="text-[13px] text-ink-3">
+                  {selecting
+                    ? `${selected.size} selected`
+                    : `${products.filter((p) => p.published).length} of ${products.length} online`}
+                </p>
+                <button
+                  onClick={() => {
+                    setSelecting((s) => !s);
+                    setSelected(new Set());
+                  }}
+                  className="text-[13px] font-semibold text-primary"
+                >
+                  {selecting ? "Done" : "Select"}
+                </button>
+              </div>
+            )}
+
             {visible.length === 0 ? (
               <p className="text-center text-[15px] text-ink-2 py-12">
                 No products match your search.
@@ -110,12 +156,25 @@ export default function ProductsPage() {
               <Card className="divide-y divide-border animate-fade-in">
                 {visible.map((product) => {
                   const status = stockStatus(product, settings);
-                  return (
-                    <Link
-                      key={product.id}
-                      href={`/products/${product.id}`}
-                      className="flex items-center gap-3 px-4 py-3.5 active:bg-surface-2 first:rounded-t-card last:rounded-b-card"
-                    >
+                  const rowClass =
+                    "w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-surface-2 first:rounded-t-card last:rounded-b-card";
+
+                  const body = (
+                    <>
+                      {selecting && (
+                        <span
+                          aria-hidden
+                          className={`size-5 rounded-md border-2 shrink-0 flex items-center justify-center ${
+                            selected.has(product.id)
+                              ? "bg-primary border-primary text-on-primary"
+                              : "border-border-strong"
+                          }`}
+                        >
+                          {selected.has(product.id) && (
+                            <span className="size-2 rounded-sm bg-current" />
+                          )}
+                        </span>
+                      )}
                       <ProductImage product={product} size="sm" />
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-ink text-[15px] truncate">
@@ -138,8 +197,33 @@ export default function ProductsPage() {
                         <p className="font-semibold text-ink">
                           {formatMoney(product.sellingPrice, settings)}
                         </p>
-                        <StockBadge status={status} />
+                        {product.published && storefront ? (
+                          <span className="flex items-center gap-1 text-[11px] font-semibold text-primary">
+                            <StoreIcon className="size-3.5" /> Online
+                          </span>
+                        ) : (
+                          <StockBadge status={status} />
+                        )}
                       </div>
+                    </>
+                  );
+
+                  return selecting ? (
+                    <button
+                      key={product.id}
+                      onClick={() => toggleSelected(product.id)}
+                      aria-pressed={selected.has(product.id)}
+                      className={rowClass}
+                    >
+                      {body}
+                    </button>
+                  ) : (
+                    <Link
+                      key={product.id}
+                      href={`/products/${product.id}`}
+                      className={rowClass}
+                    >
+                      {body}
                     </Link>
                   );
                 })}
@@ -148,6 +232,23 @@ export default function ProductsPage() {
           </>
         )}
       </main>
+
+      {selecting && selected.size > 0 && (
+        <div className="fixed bottom-20 inset-x-0 z-30 bg-transparent backdrop-blur pb-safe">
+          <div className="mx-auto max-w-md flex gap-3 px-5 py-3">
+            <Button
+              variant="secondary"
+              className="flex-1"
+              onClick={() => applyPublish(false)}
+            >
+              Take offline
+            </Button>
+            <Button className="flex-1" onClick={() => applyPublish(true)}>
+              Sell online
+            </Button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

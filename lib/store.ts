@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { localStorageAdapter, type StorageAdapter } from "./storage";
+import type { Order, StoreProfile } from "./storefront-types";
 import {
   DEFAULT_SETTINGS,
   type AppSettings,
@@ -65,6 +66,35 @@ export const pendingSalesStore = new Store<PendingSale[]>("pendingSales", []);
 export const profileStore = new Store<UserProfile | null>("profile", null);
 export const settingsStore = new Store<AppSettings>("settings", DEFAULT_SETTINGS);
 
+/**
+ * Storefront state. Unlike the stores above these are server-derived caches,
+ * NOT the source of truth — the `stores` and `orders` tables are. They are
+ * deliberately excluded from the sync push body: the push is a last-write-wins
+ * full overwrite, so including them would let a stale device clobber another
+ * device's storefront config or resurrect a cancelled order.
+ */
+export const storefrontStore = new Store<StoreProfile | null>(
+  "storefront",
+  null,
+);
+export const ordersStore = new Store<Order[]>("orders", []);
+
+/**
+ * Ids of accepted orders with no matching local PendingSale. Happens when a
+ * device restores an older blob. Surfaced as a banner for manual review rather
+ * than silently re-reserving stock, which would double-deduct if the hold does
+ * exist on another device.
+ */
+export const needsAttentionStore = new Store<string[]>("ordersNeedAttention", []);
+
+export interface SyncStatus {
+  at: string;
+  ok: boolean;
+  catalog: "skipped" | "projected" | "deferred" | null;
+}
+
+export const lastSyncStore = new Store<SyncStatus | null>("lastSync", null);
+
 export function useStore<T>(store: Store<T>): T {
   return useSyncExternalStore(
     store.subscribe,
@@ -114,4 +144,8 @@ export function resetAllData(): void {
   pendingSalesStore.reset();
   profileStore.reset();
   settingsStore.reset();
+  storefrontStore.reset();
+  ordersStore.reset();
+  needsAttentionStore.reset();
+  lastSyncStore.reset();
 }

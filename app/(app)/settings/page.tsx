@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
+import { SettingsGroup, SettingsRow } from "@/components/settings/settings-row";
+import { StorefrontSection } from "@/components/settings/storefront-section";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field } from "@/components/ui/input";
 import { Sheet } from "@/components/ui/sheet";
 import { PIN_LENGTH, PinInput } from "@/components/ui/pin-input";
 import {
-  ChevronRightIcon,
   LockIcon,
   LogoutIcon,
   MailIcon,
@@ -95,6 +96,8 @@ export default function SettingsPage() {
             onClick={() => setSheet("business")}
           />
         </SettingsGroup>
+
+        <StorefrontSection />
 
         <SettingsGroup title="Security">
           <SettingsRow
@@ -206,56 +209,6 @@ export default function SettingsPage() {
         </div>
       </Sheet>
     </>
-  );
-}
-
-function SettingsGroup({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="flex flex-col gap-2">
-      <h2 className="text-[13px] font-bold uppercase tracking-wide text-ink-3 px-1">
-        {title}
-      </h2>
-      <Card className="divide-y divide-border">{children}</Card>
-    </section>
-  );
-}
-
-function SettingsRow({
-  icon,
-  label,
-  value,
-  onClick,
-  disabled = false,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value?: string;
-  onClick?: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className="w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-surface-2 disabled:active:bg-transparent first:rounded-t-card last:rounded-b-card"
-    >
-      <span className="size-9 rounded-xl bg-surface-2 text-ink-2 flex items-center justify-center shrink-0">
-        {icon}
-      </span>
-      <span className="flex-1 font-semibold text-ink text-[15px]">{label}</span>
-      {value && (
-        <span className="text-[14px] text-ink-3 truncate max-w-36">
-          {value}
-        </span>
-      )}
-      {!disabled && <ChevronRightIcon className="size-4 text-ink-3 shrink-0" />}
-    </button>
   );
 }
 

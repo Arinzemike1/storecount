@@ -6,6 +6,10 @@ export interface Product {
   /** Optional small image stored as a data URL (resized before saving). */
   image?: string;
   category?: string;
+  /** Longer copy shown only on the public storefront. */
+  description?: string;
+  /** Opt-in: listed on the public storefront. Absent or false = not listed. */
+  published?: boolean;
   costPrice: number;
   sellingPrice: number;
   quantity: number;
@@ -32,13 +36,18 @@ export interface Sale {
   totalQuantity: number;
   total: number;
   profit: number;
+  /** Set when this sale settled an online storefront order. */
+  orderId?: string;
   createdAt: string;
 }
 
 /**
- * A sale held for a customer who promised to pay later. Unlike a Sale it does
- * NOT reduce stock — it is a saved draft that can be resumed, edited, then
- * either completed (becomes a Sale) or discarded.
+ * A sale held for a customer who will pay later. The held goods leave the shelf
+ * immediately — stock is reserved on create and released on discard or
+ * checkout. Resumable and editable until it is either completed (becomes a
+ * Sale) or discarded.
+ *
+ * Also used to represent an accepted online order awaiting delivery.
  */
 export interface PendingSale {
   id: string;
@@ -48,6 +57,8 @@ export interface PendingSale {
   total: number;
   /** Optional label for who owes — a name, phone, or nickname. */
   customerName?: string;
+  /** Set when this hold is an accepted storefront order. */
+  orderId?: string;
   createdAt: string;
   updatedAt: string;
 }

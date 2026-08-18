@@ -1,6 +1,14 @@
 import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { signToken } from "@/lib/jwt";
+import {
+  checkLockout,
+  clearFailures,
+  ipKey,
+  phoneKey,
+  recordFailure,
+} from "@/lib/login-throttle";
+import { loadStorefront } from "@/lib/store-server";
 import { DEFAULT_SETTINGS } from "@/lib/types";
 
 function normalizePhone(phone: string): string {
@@ -68,6 +76,22 @@ export async function POST(request: NextRequest) {
   }
 
   const normalizedPhone = normalizePhone(phone);
+  const throttleKeys = [phoneKey(normalizedPhone), ipKey(request)];
+
+  const waitSeconds = await checkLockout(throttleKeys);
+  if (waitSeconds > 0) {
+    return Response.json(
+      {
+        error: `Too many attempts. Try again in ${
+          waitSeconds < 60
+            ? `${waitSeconds} seconds`
+            : `${Math.ceil(waitSeconds / 60)} minutes`
+        }.`,
+        retryAfter: waitSeconds,
+      },
+      { status: 429, headers: { "Retry-After": String(waitSeconds) } },
+    );
+  }
 
   const { data: user } = await db
     .from("users")
@@ -83,10 +107,20 @@ export async function POST(request: NextRequest) {
     { status: 401 },
   );
 
-  if (!user) return badCredentials;
+  if (!user) {
+    // Burn an attempt even for an unknown phone, otherwise the throttle itself
+    // becomes an enumeration oracle: throttled means the account exists.
+    await recordFailure(throttleKeys);
+    return badCredentials;
+  }
 
   const hash = await derivePinHash(pin, user.pin_salt, user.pin_iterations);
-  if (hash !== user.pin_hash) return badCredentials;
+  if (hash !== user.pin_hash) {
+    await recordFailure(throttleKeys);
+    return badCredentials;
+  }
+
+  await clearFailures(throttleKeys);
 
   // Fetch or lazily create the user_data row.
   let { data: userData } = await db
@@ -111,6 +145,10 @@ export async function POST(request: NextRequest) {
     };
   }
 
+  // Login is a combined authenticate + full pull, so it must return the same
+  // shape as /api/sync/pull. Both feed hydrateFromCloud.
+  const storefront = await loadStorefront(user.id);
+
   return Response.json({
     token: signToken(user.id),
     profile: {
@@ -129,5 +167,7 @@ export async function POST(request: NextRequest) {
     sales: userData.sales ?? [],
     pendingSales: userData.pending_sales ?? [],
     settings: userData.settings ?? DEFAULT_SETTINGS,
+    store: storefront.store,
+    orders: storefront.orders,
   });
 }

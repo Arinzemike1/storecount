@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { extractBearer, verifyToken } from "@/lib/jwt";
+import { loadStorefront } from "@/lib/store-server";
 import { DEFAULT_SETTINGS } from "@/lib/types";
 
 export async function GET(request: NextRequest) {
@@ -9,7 +10,7 @@ export async function GET(request: NextRequest) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [userResult, dataResult] = await Promise.all([
+  const [userResult, dataResult, storefront] = await Promise.all([
     db
       .from("users")
       .select(
@@ -22,6 +23,7 @@ export async function GET(request: NextRequest) {
       .select("products, sales, pending_sales, settings")
       .eq("user_id", userId)
       .maybeSingle(),
+    loadStorefront(userId),
   ]);
 
   if (userResult.error || !userResult.data) {
@@ -49,5 +51,7 @@ export async function GET(request: NextRequest) {
     sales: d.sales ?? [],
     pendingSales: d.pending_sales ?? [],
     settings: d.settings ?? DEFAULT_SETTINGS,
+    store: storefront.store,
+    orders: storefront.orders,
   });
 }
