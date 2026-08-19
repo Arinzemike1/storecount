@@ -8,12 +8,13 @@ import { Button } from "@/components/ui/button";
 import {
   CartIcon,
   ChevronRightIcon,
+  ClockIcon,
   PlusIcon,
   ReceiptIcon,
 } from "@/components/ui/icons";
 import { startOfToday } from "@/lib/calc";
 import { formatDate, formatMoney, formatTime } from "@/lib/format";
-import { useSales, useSettings } from "@/lib/store";
+import { usePendingSales, useSales, useSettings } from "@/lib/store";
 import type { Sale } from "@/lib/types";
 
 /** Groups sales (already newest-first) into day buckets for scannable history. */
@@ -40,6 +41,7 @@ function groupByDay(sales: Sale[]): { label: string; sales: Sale[] }[] {
 
 export default function SalesPage() {
   const sales = useSales();
+  const pendingSales = usePendingSales();
   const settings = useSettings();
   const money = (amount: number) => formatMoney(amount, settings);
 
@@ -58,7 +60,48 @@ export default function SalesPage() {
         }
       />
       <main className="flex flex-col gap-5 px-5">
-        {sales.length === 0 ? (
+        {pendingSales.length > 0 && (
+          <section className="flex flex-col gap-2.5">
+            <div className="flex items-center justify-between px-0.5">
+              <h2 className="text-[15px] font-bold text-ink flex items-center gap-1.5">
+                <ClockIcon className="size-4 text-warning" />
+                Pay later
+              </h2>
+              <p className="text-[13px] font-semibold text-ink-2">
+                {money(pendingSales.reduce((sum, p) => sum + p.total, 0))} due
+              </p>
+            </div>
+            <Card className="divide-y divide-border">
+              {pendingSales.map((pending) => (
+                <Link
+                  key={pending.id}
+                  href={`/sales/new?pending=${pending.id}`}
+                  className="flex items-center gap-3 px-4 py-3.5 active:bg-surface-2 first:rounded-t-card last:rounded-b-card"
+                >
+                  <span className="size-11 rounded-xl bg-warning-soft text-warning flex items-center justify-center shrink-0">
+                    <ClockIcon className="size-5" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-ink text-[15px] truncate">
+                      {pending.customerName || "Unnamed customer"}
+                    </p>
+                    <p className="text-[13px] text-ink-3">
+                      {pending.totalQuantity}{" "}
+                      {pending.totalQuantity === 1 ? "item" : "items"} ·{" "}
+                      {formatTime(pending.updatedAt)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-ink">{money(pending.total)}</p>
+                    <p className="text-[13px] text-warning font-medium">Resume</p>
+                  </div>
+                  <ChevronRightIcon className="size-4 text-ink-3 shrink-0" />
+                </Link>
+              ))}
+            </Card>
+          </section>
+        )}
+        {sales.length === 0 && pendingSales.length === 0 ? (
           <EmptyState
             icon={<CartIcon />}
             title="No sales yet"

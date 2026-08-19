@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { useUnlocked } from "@/lib/auth";
+import { useOrderPolling } from "@/lib/orders";
 import { useHydrated, useProfile } from "@/lib/store";
 
 /** Immersive flows that hide the tab bar (e.g. ringing up a sale). */
@@ -15,6 +16,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const unlocked = useUnlocked();
   const router = useRouter();
   const pathname = usePathname();
+
+  // Must run before the render guard below — hooks cannot be conditional.
+  useOrderPolling();
 
   useEffect(() => {
     if (!hydrated) return;

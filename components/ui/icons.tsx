@@ -135,6 +135,13 @@ export const ReceiptIcon = (props: IconProps) => (
   </Icon>
 );
 
+export const ClockIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7.5V12l3 2" />
+  </Icon>
+);
+
 export const AlertIcon = (props: IconProps) => (
   <Icon {...props}>
     <path d="M12 3 1.8 20.2h20.4L12 3Z" />
@@ -215,6 +222,45 @@ export const BackspaceIcon = (props: IconProps) => (
 );
 
 /** Store Count brand mark — rounded square with rising tally bars. */
+export const TruckIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M3 7.5h10.5v9H3z" />
+    <path d="M13.5 11h4l3 3v2.5h-7z" />
+    <circle cx="7" cy="18" r="1.8" />
+    <circle cx="17" cy="18" r="1.8" />
+  </Icon>
+);
+
+export const StoreIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M4 9.5V20h16V9.5" />
+    <path d="M3 5h18l-1.2 4.2a3 3 0 0 1-5.8.3 3 3 0 0 1-6 0 3 3 0 0 1-5.8-.3Z" />
+    <path d="M10 20v-5h4v5" />
+  </Icon>
+);
+
+export const ShareIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M12 3v12" />
+    <path d="m8 7 4-4 4 4" />
+    <path d="M5 13v6.5h14V13" />
+  </Icon>
+);
+
+export const BellIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M18 9a6 6 0 1 0-12 0c0 5-2 6.5-2 6.5h16S18 14 18 9Z" />
+    <path d="M10.5 19a1.8 1.8 0 0 0 3 0" />
+  </Icon>
+);
+
+export const CopyIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <rect x="9" y="9" width="11" height="11" rx="2.5" />
+    <path d="M15 6.5A2.5 2.5 0 0 0 12.5 4H6.5A2.5 2.5 0 0 0 4 6.5v6A2.5 2.5 0 0 0 6.5 15" />
+  </Icon>
+);
+
 export function Logo({ size = 56 }: { size?: number }) {
   return (
     <svg
